@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pembaca Token Ujian</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: #0a0a0a;
+      color: #fafafa;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-image:
+        linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+      background-size: 50px 50px;
+      pointer-events: none;
+    }
+
+    body::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.03) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .container {
+      max-width: 500px;
+      width: 100%;
+      position: relative;
+      z-index: 1;
+    }
+
+    h2 {
+      font-size: 2rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      text-align: center;
+      letter-spacing: -0.5px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #888;
+      font-size: 0.875rem;
+      margin-bottom: 2rem;
+    }
+
+    .card {
+      background: #141414;
+      border: 1px solid #262626;
+      border-radius: 12px;
+      padding: 2rem;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+      color: #fafafa;
+    }
+
+    .label-description {
+      font-size: 0.8rem;
+      color: #888;
+      font-weight: 400;
+      margin-top: 0.25rem;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      font-size: 1rem;
+      border: 1px solid #262626;
+      border-radius: 8px;
+      background: #0a0a0a;
+      color: #fafafa;
+      transition: all 0.2s;
+      text-align: center;
+      letter-spacing: 2px;
+    }
+
+    input[type="text"]:focus {
+      outline: none;
+      border-color: #fafafa;
+      background: #141414;
+    }
+
+    input[type="text"]::placeholder {
+      color: #525252;
+    }
+
+    select {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      font-size: 0.9rem;
+      border: 1px solid #262626;
+      border-radius: 8px;
+      background: #0a0a0a;
+      color: #fafafa;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    select:focus {
+      outline: none;
+      border-color: #fafafa;
+      background: #141414;
+    }
+
+    select option {
+      background: #141414;
+      color: #fafafa;
+    }
+
+    .range-group {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    input[type="range"] {
+      flex: 1;
+      height: 6px;
+      border-radius: 3px;
+      background: #262626;
+      outline: none;
+      -webkit-appearance: none;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #fafafa;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+      background: #fff;
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #fafafa;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+    }
+
+    input[type="range"]::-moz-range-thumb:hover {
+      transform: scale(1.2);
+      background: #fff;
+    }
+
+    .rate-value {
+      font-weight: 600;
+      font-size: 0.9rem;
+      min-width: 40px;
+      text-align: center;
+      color: #888;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+      margin-top: 2rem;
+    }
+
+    button {
+      padding: 0.875rem 1.5rem;
+      font-size: 0.95rem;
+      font-weight: 500;
+      border: 1px solid #262626;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: #fafafa;
+      color: #0a0a0a;
+    }
+
+    button:hover {
+      background: #fff;
+      border-color: #fafafa;
+      transform: translateY(-1px);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    button:nth-child(2) {
+      background: transparent;
+      color: #fafafa;
+      border-color: #262626;
+    }
+
+    button:nth-child(2):hover {
+      background: #1a1a1a;
+      border-color: #404040;
+    }
+
+    .note {
+      margin-top: 1.5rem;
+      padding: 1rem;
+      background: #0a0a0a;
+      border: 1px solid #262626;
+      border-radius: 8px;
+      font-size: 0.825rem;
+      line-height: 1.6;
+      color: #888;
+    }
+
+    .note b {
+      color: #fafafa;
+      font-weight: 500;
+    }
+
+    @media (max-width: 600px) {
+      .card {
+        padding: 1.5rem;
+      }
+
+      h2 {
+        font-size: 1.5rem;
+      }
+
+      .controls {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h2>Exam Token Reader</h2>
+    <p class="subtitle">Masukkan token ujian Anda untuk dibacakan</p>
+
+    <div class="card">
+      <div class="form-group">
+        <label for="token">
+          Token Ujian
+          <div class="label-description">Masukkan kode token yang akan dibacakan</div>
+        </label>
+        <input type="text" id="token" placeholder="Masukkan token di sini">
+      </div>
+
+      <div class="form-group">
+        <label for="voiceSelect">
+          Pilih Suara
+          <div class="label-description">Pilih suara pembaca yang tersedia</div>
+        </label>
+        <select id="voiceSelect"></select>
+      </div>
+
+      <div class="form-group">
+        <label for="rate">
+          Kecepatan Pembacaan
+          <div class="label-description">Atur kecepatan pembacaan audio</div>
+        </label>
+        <div class="range-group">
+          <input type="range" id="rate" min="0.5" max="2" step="0.1" value="1">
+          <span class="rate-value" id="rateValue">1.0x</span>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button onclick="bacaToken()">🔊 Baca Token</button>
+        <button onclick="ujiSuara()">🔈 Coba Suara</button>
+      </div>
+
+      <div class="note">
+        💡 Pastikan Anda sudah menginstal suara Bahasa Indonesia seperti <b>Microsoft Gadis</b> pada Windows Settings →
+        Time & Language → Speech.
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const voiceSelect = document.getElementById("voiceSelect");
+    const rateInput = document.getElementById("rate");
+    const rateValue = document.getElementById("rateValue");
+
+    let voices = [];
+
+    function isiDaftarSuara() {
+      voices = speechSynthesis.getVoices();
+      voiceSelect.innerHTML = "";
+      voices
+        .filter(v => v.lang.startsWith("id") || v.name.toLowerCase().includes("gadis"))
+        .forEach(v => {
+          const option = document.createElement("option");
+          option.value = v.name;
+          option.textContent = `${v.name} (${v.lang})`;
+          voiceSelect.appendChild(option);
+        });
+
+      if (voiceSelect.options.length === 0) {
+        const option = document.createElement("option");
+        option.textContent = "Tidak ada suara Bahasa Indonesia ditemukan";
+        voiceSelect.appendChild(option);
+      }
+    }
+
+    speechSynthesis.onvoiceschanged = isiDaftarSuara;
+
+    rateInput.addEventListener("input", () => {
+      rateValue.textContent = rateInput.value + "x";
+    });
+
+    function bacaToken() {
+      const token = document.getElementById("token").value.trim();
+      if (!token) {
+        alert("Masukkan token terlebih dahulu!");
+        return;
+      }
+      const teks = "Perhatian, token ujian adalah " + token.split("").join(" ");
+      ucapkan(teks);
+    }
+
+    function ujiSuara() {
+      ucapkan("Ini adalah uji suara Bahasa Indonesia.");
+    }
+
+    function ucapkan(teks) {
+      const ucapan = new SpeechSynthesisUtterance(teks);
+      ucapan.lang = "id-ID";
+      ucapan.rate = parseFloat(rateInput.value);
+
+      const suaraDipilih = voices.find(v => v.name === voiceSelect.value);
+      if (suaraDipilih) ucapan.voice = suaraDipilih;
+
+      speechSynthesis.cancel();
+      speechSynthesis.speak(ucapan);
+    }
+  </script>
+</body>
+
+</html>
