@@ -22,7 +22,7 @@
       justify-content: center;
       padding: 20px;
       position: relative;
-      overflow: hidden;
+      /* overflow: hidden; */
     }
 
     body::before {
@@ -70,14 +70,14 @@
       text-align: center;
       color: #888;
       font-size: 0.875rem;
-      margin-bottom: 2rem;
+      margin-bottom: 1.2rem;
     }
 
     .card {
       background: #141414;
       border: 1px solid #262626;
       border-radius: 12px;
-      padding: 2rem;
+      padding: 1.75rem;
       box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
     }
 
@@ -200,22 +200,52 @@
       color: #888;
     }
 
+    .repeat-options {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .repeat-btn {
+      flex: 1;
+      min-width: 60px;
+      padding: 0.5rem;
+      font-size: 0.875rem;
+      border: 1px solid #262626;
+      border-radius: 6px;
+      background: #0a0a0a;
+      color: #888;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .repeat-btn:hover {
+      border-color: #404040;
+      background: #1a1a1a;
+    }
+
+    .repeat-btn.active {
+      background: #fafafa;
+      color: #0a0a0a;
+      border-color: #fafafa;
+    }
+
     .controls {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1fr 1fr 1fr;
       gap: 0.75rem;
       margin-top: 2rem;
     }
 
     button {
-      padding: 0.875rem 1.5rem;
+      padding: 0.55rem 1rem;
       font-size: 0.95rem;
       font-weight: 500;
       border: 1px solid #262626;
       border-radius: 8px;
       cursor: pointer;
       transition: all 0.2s;
-      background: #fafafa;
+      background: #;
       color: #0a0a0a;
     }
 
@@ -229,15 +259,48 @@
       transform: translateY(0);
     }
 
-    button:nth-child(2) {
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    button:disabled:hover {
+      background: #fafafa;
+      transform: none;
+    }
+
+    .btn-secondary {
       background: transparent;
       color: #fafafa;
       border-color: #262626;
     }
 
-    button:nth-child(2):hover {
+    .btn-secondary:hover {
       background: #1a1a1a;
       border-color: #404040;
+    }
+
+    .btn-secondary:disabled:hover {
+      background: transparent;
+    }
+
+    .status {
+      margin-top: 1rem;
+      padding: 0.75rem 1rem;
+      background: #0a0a0a;
+      border: 1px solid #262626;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      color: #888;
+      text-align: center;
+      display: none;
+    }
+
+    .status.active {
+      display: block;
+      border-color: #404040;
+      color: #fafafa;
     }
 
     .note {
@@ -254,6 +317,11 @@
     .note b {
       color: #fafafa;
       font-weight: 500;
+    }
+
+    a {
+      color: #888;
+      text-decoration: underline;
     }
 
     @media (max-width: 600px) {
@@ -275,7 +343,7 @@
 <body>
   <div class="container">
     <h2>Exam Token Reader</h2>
-    <p class="subtitle">Masukkan token ujian Anda untuk dibacakan</p>
+    <p class="subtitle">Pembaca Token Ujian Otomatis Menggunakan Text-To-Speech API</p>
 
     <div class="card">
       <div class="form-group">
@@ -305,14 +373,31 @@
         </div>
       </div>
 
-      <div class="controls">
-        <button onclick="bacaToken()">🔊 Baca Token</button>
-        <button onclick="ujiSuara()">🔈 Coba Suara</button>
+      <div class="form-group">
+        <label>
+          Jumlah Pengulangan
+          <div class="label-description">Pilih berapa kali token akan dibacakan</div>
+        </label>
+        <div class="repeat-options">
+          <button class="repeat-btn active" onclick="setRepeat(1)">1x</button>
+          <button class="repeat-btn" onclick="setRepeat(2)">2x</button>
+          <button class="repeat-btn" onclick="setRepeat(3)">3x</button>
+          <button class="repeat-btn" onclick="setRepeat(4)">4x</button>
+          <button class="repeat-btn" onclick="setRepeat(5)">5x</button>
+        </div>
       </div>
+
+      <div class="controls">
+        <button id="playBtn" onclick="bacaToken()">▶️ Play</button>
+        <button id="pauseBtn" class="btn-secondary" onclick="pauseUcapan()" disabled>⏸️ Pause</button>
+        <button class="btn-secondary" onclick="ujiSuara()">🔈 Test</button>
+      </div>
+
+      <div id="status" class="status"></div>
 
       <div class="note">
         💡 Pastikan Anda sudah menginstal suara Bahasa Indonesia seperti <b>Microsoft Gadis</b> pada Windows Settings →
-        Time & Language → Speech.
+        Time & Language → Speech. <a href="https://github.com/alarwasyi98/exam-token-reader/">Bantuan?</a>
       </div>
     </div>
   </div>
@@ -321,8 +406,15 @@
     const voiceSelect = document.getElementById("voiceSelect");
     const rateInput = document.getElementById("rate");
     const rateValue = document.getElementById("rateValue");
+    const playBtn = document.getElementById("playBtn");
+    const pauseBtn = document.getElementById("pauseBtn");
+    const statusDiv = document.getElementById("status");
 
     let voices = [];
+    let repeatCount = 1;
+    let currentRepeat = 0;
+    let isPaused = false;
+    let isPlaying = false;
 
     function isiDaftarSuara() {
       voices = speechSynthesis.getVoices();
@@ -349,17 +441,103 @@
       rateValue.textContent = rateInput.value + "x";
     });
 
+    function setRepeat(count) {
+      repeatCount = count;
+      document.querySelectorAll('.repeat-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      event.target.classList.add('active');
+    }
+
+    function updateStatus(message) {
+      statusDiv.textContent = message;
+      statusDiv.classList.add('active');
+    }
+
+    function hideStatus() {
+      statusDiv.classList.remove('active');
+    }
+
     function bacaToken() {
       const token = document.getElementById("token").value.trim();
       if (!token) {
         alert("Masukkan token terlebih dahulu!");
         return;
       }
+
+      if (isPaused) {
+        speechSynthesis.resume();
+        isPaused = false;
+        playBtn.disabled = true;
+        pauseBtn.disabled = false;
+        updateStatus(`Melanjutkan pembacaan (${currentRepeat}/${repeatCount})...`);
+        return;
+      }
+
+      currentRepeat = 0;
+      isPlaying = true;
+      playBtn.disabled = true;
+      pauseBtn.disabled = false;
+      bacaTokenBerulang(token);
+    }
+
+    function bacaTokenBerulang(token) {
+      if (currentRepeat >= repeatCount) {
+        selesaiBaca();
+        return;
+      }
+
+      currentRepeat++;
+      updateStatus(`Membaca token (${currentRepeat}/${repeatCount})...`);
+
       const teks = "Perhatian, token ujian adalah " + token.split("").join(" ");
-      ucapkan(teks);
+      const ucapan = new SpeechSynthesisUtterance(teks);
+      ucapan.lang = "id-ID";
+      ucapan.rate = parseFloat(rateInput.value);
+
+      const suaraDipilih = voices.find(v => v.name === voiceSelect.value);
+      if (suaraDipilih) ucapan.voice = suaraDipilih;
+
+      ucapan.onend = () => {
+        if (!isPaused && isPlaying) {
+          setTimeout(() => {
+            if (!isPaused && isPlaying) {
+              bacaTokenBerulang(token);
+            }
+          }, 1000);
+        }
+      };
+
+      speechSynthesis.speak(ucapan);
+    }
+
+    function pauseUcapan() {
+      if (speechSynthesis.speaking && !isPaused) {
+        speechSynthesis.pause();
+        isPaused = true;
+        playBtn.disabled = false;
+        pauseBtn.disabled = true;
+        updateStatus(`Dijeda (${currentRepeat}/${repeatCount})`);
+      }
+    }
+
+    function selesaiBaca() {
+      isPlaying = false;
+      isPaused = false;
+      playBtn.disabled = false;
+      pauseBtn.disabled = true;
+      updateStatus('Pembacaan selesai ✓');
+      setTimeout(hideStatus, 3000);
     }
 
     function ujiSuara() {
+      speechSynthesis.cancel();
+      isPlaying = false;
+      isPaused = false;
+      currentRepeat = 0;
+      playBtn.disabled = false;
+      pauseBtn.disabled = true;
+      hideStatus();
       ucapkan("Ini adalah uji suara Bahasa Indonesia.");
     }
 
@@ -371,7 +549,6 @@
       const suaraDipilih = voices.find(v => v.name === voiceSelect.value);
       if (suaraDipilih) ucapan.voice = suaraDipilih;
 
-      speechSynthesis.cancel();
       speechSynthesis.speak(ucapan);
     }
   </script>
